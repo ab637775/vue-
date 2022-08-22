@@ -9,7 +9,10 @@
     </el-header>
     <common-tag></common-tag>
     <el-main>
-      <router-view></router-view>
+      <!-- 利用keep-alive缓存组件，使得切换页面时也能计时 -->
+      <keep-alive include="pageone">
+            <router-view></router-view>
+      </keep-alive>
     </el-main>
   </el-container>
 </el-container>

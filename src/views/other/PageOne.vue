@@ -81,6 +81,7 @@ export default {
   },
   methods: {
     ...mapMutations(['updateTemp', 'setRecord', 'getRecord']),
+    // 获取现在的时间
     getNowTime () {
       const allWeek = [
         '星期天',
@@ -106,6 +107,7 @@ export default {
       time = time >= 10 ? '' + time : '0' + time
       return time
     },
+    // 开始计时
     startLearning () {
       let learningSecs = 0
       let learningMins = 0
@@ -120,11 +122,11 @@ export default {
         learningSecs++
         if (learningSecs > 59) {
           learningSecs -= 60
+          learningMins++
           if (learningMins > 59) {
             learningMins -= 60
             learningHours++
           }
-          learningMins++
         }
         this.SecsStr = this.setZero(learningSecs)
         this.MinsStr = this.setZero(learningMins)
@@ -140,6 +142,7 @@ export default {
       this.temp[2] = this.SecsStr
       console.log(this.temp)
       console.log(this.temp[0] + ':' + this.temp[1] + ':' + this.temp[2])
+      // 在暂停时暂存当前学习记录
       this.updateTemp(this.temp)
       console.log('这是tempVuex', this.tempVuex)
       this.isStop = true
@@ -180,16 +183,16 @@ export default {
         })
         return
       }
-
       // 学习时间小于1分钟就弹出错误警告
-      // if (this.HoursStr === '00' && this.MinsStr === '00') {
-      //   this.$message.error({
-      //     message: '当前学习时间小于1分钟，保存失败',
-      //     duration: 500
-      //   })
-      //   return
-      // }
+      if (this.HoursStr === '00' && this.MinsStr === '00') {
+        this.$message.error({
+          message: '当前学习时间小于1分钟，保存失败',
+          duration: 500
+        })
+        return
+      }
       const saveDate = `${this.year}年${this.month}月${this.day}日`
+      // 获取vuex里暂存的temp数据
       const tempTime = this.tempVuex
       const saveCurrentTime = `${this.hours}:${this.mins}:${this.secs}`
       const saveRecord = {
@@ -204,21 +207,26 @@ export default {
         totalTime: null,
         children: []
       }
+      // 初始化depot
       if (this.depot.length === 0) {
         this.depot.push(tempDepot)
       }
       const lastIndex = this.depot.length - 1
       let childLen = 0
       const learningTimeArr = []
+      // 如果是同一天计时的情况
       if (this.depot.every(val => { return val.date === saveDate })) {
+        // 在子数组中添加今天此次的学习记录
         this.depot[lastIndex].children.push(saveRecord)
         childLen = this.depot[lastIndex].children.length
         console.log('childLen', childLen)
         // console.log('修改id前的this.depot', this.depot)
         console.log('id是', this.depot[lastIndex].children[childLen - 1].id)
+        // 学习时间存储
         this.depot[lastIndex].children.forEach(value => {
           learningTimeArr.push(value.learningTime)
         })
+        // 计算今天的学习总时长
         this.depot[lastIndex].totalTime = this.calTotalTime(learningTimeArr)
         console.log('这是totalTime', this.depot[lastIndex].totalTime)
         this.subId++
@@ -230,18 +238,22 @@ export default {
       // console.log(tempDepot)
 
       console.log('这是depot', this.depot)
-
+      // 把depot暂存到vuex中
+      // depot 目前包括  id,date,totalTime,children: [...]
       this.setRecord(this.depot)
       const username = JSON.parse(Cookie.get('username'))
+      // 根据不同用户，设置不同的学习cookie，加以区分
       const cookieName = `learningRecord${username}`
       console.log(cookieName)
       if (!Cookie.get(`${cookieName}`)) {
+        // 如果cookie不存在，则用当前学习记录depot初始化cookie
         this.isCookie = false
         Cookie.set(`${cookieName}`, JSON.stringify(this.depot), { expires: 7 })
         console.log('没有这个数据')
         const learningRecord = JSON.parse(Cookie.get(`${cookieName}`))
         console.log('所以新设定数据为', learningRecord)
       } else {
+        // 如果cookie存在，则提取cookie，赋值给learningRecord，在进行进一步的判断
         this.isCookie = true
         const learningRecord = JSON.parse(Cookie.get(`${cookieName}`))
         const cookieLastIndex = learningRecord.length - 1
@@ -249,6 +261,7 @@ export default {
         const cookieChildLen = learningRecord[cookieLastIndex].children.length
         console.log('这是cookieChildLen', cookieChildLen)
         // console.log('learningRecord修改前', learningRecord)
+        // 判断当前记录的数据和learningRecord是否是同一天
         // 是同一天的情况
         if (learningRecord.some(val => { return val.date === saveDate })) {
           const saveTotalTime = this.depot[lastIndex].totalTime
@@ -263,6 +276,7 @@ export default {
           // if (!learningRecord[cookieLastIndex].totalTime) {
           //   learningRecord[cookieLastIndex].totalTime = saveTotalTime
           // } else {
+          // 计算学习总时长
           learningRecord[cookieLastIndex].children.forEach(value => {
             recalTotalTime.push(value.learningTime)
           })
@@ -273,10 +287,13 @@ export default {
 
           learningRecord[cookieLastIndex].children.push(saveTemp)
           console.log('有这个数据且被修改了', learningRecord)
+          // 上传新的learningRecord的cookie
           Cookie.set(`${cookieName}`, JSON.stringify(learningRecord), { expires: 7 })
           this.cookie = learningRecord
         } else {
           // 不是同一天的情况
+          // 若第一次点击时，处于不是同一天的情况，则今天之内的第二次点击就会变成同一天的情况
+          // learningRecord里添加一组新的学习记录对象
           learningRecord.push(...this.depot)
           const cookieNextDateLastIndex = learningRecord.length - 1
           learningRecord[cookieNextDateLastIndex].id += 1
@@ -303,12 +320,6 @@ export default {
       })
     },
     printLearning () {
-      // if (this.HoursStr === '00' && this.MinsStr === '00') {
-      //   this.$message({
-      //     message: '学习时间未满1分钟，不得打印！',
-      //     type: 'warning'
-      //   })
-      // }
       const printContainer = document.querySelector('.print-container')
       this.isbtn = !this.isbtn
       if (this.isbtn) {
@@ -322,7 +333,7 @@ export default {
     limitID (id) {
       // 传入数字id转化为字符串再进行处理，使得主id不变，副id加一
       // 最后输出副id加一的子数组的id值
-      // 如传入12 输出 13 ， 传入 19 输出 120 ，传入29 输出 210
+      // 如传入12 输出 13 ， 传入 19 输出 110 ，传入29 输出 210
       // 确保children子数组存储ID数量在十个以上时不会出错
       id = id + ''
       const str = id.slice(1)

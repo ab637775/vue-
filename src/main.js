@@ -22,6 +22,7 @@ Vue.directive('noMoreClick', {
 })
 
 Vue.config.productionTip = false
+// 遍历安装获取所有element-ui插件
 getEl()
 router.beforeEach((to, from, next) => {
   store.commit('getToken')
