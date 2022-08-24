@@ -1,4 +1,5 @@
-import axios from 'axios'
+// import axios from 'axios'
+import axios from '@/request/index.js'
 // export function getTableData () {
 //   return serve({
 //     method: 'GET',
