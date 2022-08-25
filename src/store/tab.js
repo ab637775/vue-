@@ -62,13 +62,16 @@ export default {
           item.component = () => import(`../views/${item.url}`)
           menuArray.push(item)
         }
-        // 把生成的动态路由添加到routes里
-        menuArray.forEach(item => {
-          router.addRoute('Main', item)
-          // console.log(item)
-        })
       })
       console.log('menuArray', menuArray)
+      // 把生成的动态路由添加到routes里
+      menuArray.forEach(item => {
+        if (item.name != 'home') {
+          router.addRoute('Main', item)
+          // console.log(item)
+        }
+      })
+
       console.log('menu', state.menu)
     }
   }

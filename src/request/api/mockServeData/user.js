@@ -1,6 +1,7 @@
 import Mock from 'mockjs'
 
 // get请求从config.url获取参数，post从config.body中获取参数
+// param2Obj函数用于截取get请求发送来的url地址中?后的参数，在get请求接口处调用
 function param2Obj (url) {
   const search = url.split('?')[1]
   // if (search.split('')[0] === '0' && search.split('')[1] === '=') {
@@ -11,6 +12,7 @@ function param2Obj (url) {
   if (!search) {
     return {}
   }
+  // 返回解码后的数据
   return JSON.parse(
     '{"' +
     decodeURIComponent(search)
@@ -20,7 +22,7 @@ function param2Obj (url) {
     '"}'
   )
 }
-
+// 模拟生成200个用户数据
 let List = []
 const count = 200
 
@@ -40,12 +42,12 @@ for (let i = 0; i < count; i++) {
 export default {
   /**
    * 获取列表
-   * 要带参数 name, page, limt; name可以不填, page,limit有默认值。
+   * 要带参数 name, page, limt; limit有默认值。
    * @param name, page, limit
    * @return {{code: number, count: number, data: *[]}}
    */
   getUserList: config => {
-    const { name, page = 1, limit = 20 } = param2Obj(config.url)
+    const { name, page, limit = 20 } = param2Obj(config.url)
     console.log('getUserList的config.url是' + config.url)
     console.log('name:' + name, 'page:' + page, '分页大小limit:' + limit)
     const mockList = List.filter(user => {
@@ -56,7 +58,8 @@ export default {
     return {
       code: 20000,
       count: mockList.length,
-      list: pageList
+      list: pageList,
+      mockList: mockList
     }
   },
   /**

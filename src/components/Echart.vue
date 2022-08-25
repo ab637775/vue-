@@ -26,6 +26,7 @@ export default {
         const xDate = order.date
         const keyArray = Object.keys(order.data[0])
         // console.log(order)
+        console.log(videoData)
         // console.log(keyArray)
         const series = []
         keyArray.forEach(key => {
@@ -35,7 +36,7 @@ export default {
             type: 'line'
           })
         })
-        console.log(series)
+        // console.log(series)
         const option_line = {
           xAxis: {
             data: xDate
